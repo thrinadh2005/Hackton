@@ -237,6 +237,33 @@ We have provided a convenient batch script that handles the entire setup.
 
 ---
 
+## 🎯 Hackathon Problem Statement 
+
+This platform implements all 5 core themes required by the hackathon:
+
+### 1. EV Asset Performance Management (APM) Agent
+*   **Requirement:** Monitor battery state-of-health, thermal events, generate predictive maintenance triggers.
+*   **Implementation:** A PyTorch `TabularMLP` predicts Battery SOH degradation based on voltage, current, and temperature. A PyTorch `Deep Autoencoder` constantly analyzes 3-axis motor vibrations to detect mechanical anomalies in real-time.
+
+### 2. Fleet Electrification Readiness & Procurement Intelligence
+*   **Requirement:** Analyze route, payload, and duty cycles to generate a transition readiness index.
+*   **Implementation:** A Deep Learning regressor ingests fleet telemetry and outputs a 0-100 `Readiness Score`, helping organizations prioritize which heavy-duty diesel vehicles to replace with EVs first to maximize ROI and carbon reduction.
+
+### 3. EV Supply Chain Risk & Traceability Agent
+*   **Requirement:** Track critical battery materials, flag geopolitical exposure and supplier risk.
+*   **Implementation:** Evaluates global supplier nodes based on geopolitical scores, material scarcity, defect rates, and lead times. A **Gen AI (LLM) Agent** interprets these supply chain shocks and broadcasts real-time mitigation strategies to the dashboard.
+
+### 4. Manufacturing Quality Intelligence (QMS Integration)
+*   **Requirement:** Detect quality drift before defective product reaches assembly.
+*   **Implementation:** 
+    *   **Wire Harness Acoustic Profiling:** AI evaluates connector seating via acoustic frequency and vision confidence.
+    *   **Weld Electrode Health Tracking:** Predicts remaining electrode life based on welding current and spatter index, stopping production before bad welds occur.
+
+### 5. Net Zero Progress & Carbon Intelligence Tracker
+*   **Requirement:** Track fleet electrification progress and quantify Scope 1 and Scope 3 emission reductions.
+*   **Implementation:** Live carbon offset tracking (diesel emissions avoided) is integrated directly into the React Dashboard's top KPI bar.
+
+---
 ## Seed Data
 Because industrial EV and supply chain data is highly proprietary, this project relies on `backend/simulator.py` to act as the seed data generator. It continuously streams high-variance synthetic data modeled after real-world physics and logistics distributions, ensuring the dashboard is always alive and interactive.
 
