@@ -5,133 +5,190 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 
-A comprehensive, **Agentic AI platform** built for the Net Zero Hackathon. This project directly addresses the industrial EV transition bottleneck by providing a unified AI layer that handles both operational asset performance (APM) and critical supply chain visibility.
-
 ---
 
-## 📖 Table of Contents
-1. [Project Overview](#project-overview)
-2. [Hackathon Problem Statement Alignment](#hackathon-problem-statement-alignment)
-3. [System Architecture](#system-architecture)
-4. [Deep Learning & GenAI Models](#deep-learning--genai-models)
-5. [Getting Started (Installation)](#getting-started-installation)
-6. [User Guide: How to Demo the Project](#user-guide-how-to-demo-the-project)
-7. [Expected Deliverables](#expected-deliverables)
+## Project Overview
+**EdgeIntel-AM** is an Agentic AI platform built for the Net Zero Hackathon. It addresses the industrial EV transition bottleneck by providing a unified AI layer that handles both operational asset performance (APM) and critical supply chain visibility. By fusing Deep Learning (PyTorch) with Generative AI (HuggingFace Transformers), it ingests high-frequency telemetry from fleets, factory floors, and supply chain nodes to predict anomalies and instantly generate human-readable mitigation strategies.
 
----
+## Key Features
+*   **EV Asset Performance Management (APM):** Predicts Battery SOH degradation (PyTorch TabularMLP) and detects mechanical motor anomalies via 3-axis vibration reconstruction (PyTorch Deep Autoencoder).
+*   **Supply Chain Risk & Traceability:** Evaluates global supplier nodes based on geopolitical scores, material scarcity, defect rates, and lead times.
+*   **Manufacturing Quality Intelligence (QMS):** Acoustic profiling of wire harnesses and predictive health tracking of weld electrodes.
+*   **Fleet Electrification Readiness:** Deep Learning regressor outputs a transition readiness score to prioritize heavy-duty diesel replacements.
+*   **Generative AI Agent:** HuggingFace `distilgpt2` NLP pipeline interprets PyTorch anomalies and broadcasts real-time mitigation strategies.
+*   **Interactive Control Room:** A simulated dashboard environment to inject real-world faults and observe the AI's reaction.
 
-## 🌟 Project Overview
-As the world transitions to electric vehicles (EVs) in industrial and commercial sectors, operators face two major hurdles: managing the predictive maintenance of complex battery and motor systems, and navigating a highly volatile, geopolitical supply chain for critical minerals (Lithium, Cobalt, etc.).
+## Tech Stack
+*   **AI/ML Layer:** PyTorch, HuggingFace Transformers (GenAI), Scikit-Learn
+*   **Backend Edge Gateway:** FastAPI, Uvicorn, WebSockets, SQLAlchemy
+*   **Database:** SQLite (`app.db`)
+*   **Frontend Dashboard:** React, Vite, Recharts, Lucide Icons, Vanilla CSS
+*   **3D Visualization:** Blender Python API (`bpy`)
 
-**EdgeIntel-AM** solves this by fusing **Deep Learning (PyTorch)** with **Generative AI (HuggingFace Transformers)**. It ingests high-frequency telemetry from fleets, factory floors, and supply chain nodes, utilizing real-time neural networks to predict anomalies and a GenAI Agent to instantly generate human-readable mitigation strategies.
+## Project Structure
+```text
+Hackton/
+├── backend/
+│   ├── main.py            # FastAPI server & WebSocket manager
+│   ├── database.py        # SQLAlchemy engine & Base
+│   ├── models.py          # SQLAlchemy ORM schemas
+│   ├── simulator.py       # High-frequency IoT data generator
+│   └── train_models.py    # PyTorch deep learning training loops
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx        # Main React dashboard & WebSocket client
+│   │   ├── index.css      # Custom neon/glassmorphism UI styles
+│   │   └── main.jsx       # React DOM entry
+│   ├── package.json       # Node dependencies
+│   └── vite.config.js     # Vite bundler config
+├── models/                # Serialized PyTorch weights (.pth) & Scalers (.pkl)
+├── blender_visualization.py # Programmatic 3D architecture generator
+├── start.bat              # Windows 1-click startup script
+└── README.md
+```
 
----
+## Database Schema
+The SQLite database stores historical telemetry for charts and AI analysis.
+*   `ev_telemetry`: Voltage, current, temperature, vibrations, SOH, anomaly flags.
+*   `industrial_reports`: QMS data (acoustic peaks, weld current, spatter levels).
+*   `supply_chain_events`: Geopolitical risk, lead times, defect rates.
+*   `fleet_readiness`: Route distances, payloads, carbon saved.
 
-## 🎯 Hackathon Problem Statement Alignment
+## Architecture Diagram
+```mermaid
+graph TD
+    subgraph Data Generation
+        A[Telemetry Simulator] -->|JSON Payloads| B(FastAPI REST Endpoints)
+    end
 
-This platform implements all 5 core themes required by the hackathon prompt:
+    subgraph Edge Gateway Backend
+        B --> C{PyTorch Inference Engine}
+        C -->|SOH & Anomalies| D[(SQLite Database)]
+        C -->|Gen AI Insight| E[HuggingFace Pipeline]
+        E --> D
+    end
 
-### 1. EV Asset Performance Management (APM) Agent
-*   **Requirement:** Monitor battery state-of-health, thermal events, generate predictive maintenance triggers.
-*   **Implementation:** A PyTorch `TabularMLP` predicts Battery SOH degradation based on voltage, current, and temperature. A PyTorch `Deep Autoencoder` constantly analyzes 3-axis motor vibrations to detect mechanical anomalies in real-time.
+    subgraph Real-Time Transport
+        D -->|DB Triggers / PubSub| F(WebSocket Manager)
+    end
 
-### 2. Fleet Electrification Readiness & Procurement Intelligence
-*   **Requirement:** Analyze route, payload, and duty cycles to generate a transition readiness index.
-*   **Implementation:** A Deep Learning regressor ingests fleet telemetry and outputs a 0-100 `Readiness Score`, helping organizations prioritize which heavy-duty diesel vehicles to replace with EVs first to maximize ROI and carbon reduction.
+    subgraph Client Application
+        F --> G[React.js Frontend]
+        G --> H[Live KPI Dashboard]
+        G --> I[AI Fault Control Room]
+        G --> J[Gen AI Insight Feed]
+    end
+```
 
-### 3. EV Supply Chain Risk & Traceability Agent
-*   **Requirement:** Track critical battery materials, flag geopolitical exposure and supplier risk.
-*   **Implementation:** Evaluates global supplier nodes based on geopolitical scores, material scarcity, defect rates, and lead times. A **Gen AI (LLM) Agent** interprets these supply chain shocks and broadcasts real-time mitigation strategies to the dashboard.
+## Application Workflow
+1.  **Ingestion:** The `simulator.py` script continuously generates standard-distribution IoT telemetry.
+2.  **Processing:** FastAPI receives the `POST` requests, standardizes inputs using `joblib` scalers, and converts them to PyTorch tensors.
+3.  **Inference:** PyTorch models predict anomalies (e.g., motor bearing wear).
+4.  **Generative Advisory:** If an anomaly is detected, the event is passed to the HuggingFace LLM to generate plain-text advice.
+5.  **Broadcast:** The original data, ML prediction, and GenAI insight are saved to SQLite and immediately broadcast via WebSockets to the React frontend.
 
-### 4. Manufacturing Quality Intelligence (QMS Integration)
-*   **Requirement:** Detect quality drift before defective product reaches assembly.
-*   **Implementation:** 
-    *   **Wire Harness Acoustic Profiling:** AI evaluates connector seating via acoustic frequency and vision confidence.
-    *   **Weld Electrode Health Tracking:** Predicts remaining electrode life based on welding current and spatter index, stopping production before bad welds occur.
+## ERD Diagram
+```mermaid
+erDiagram
+    EV_TELEMETRY {
+        int id PK
+        datetime timestamp
+        float voltage
+        float current
+        float temperature
+        float vibration_x
+        float predicted_soh
+        float anomaly_score
+        boolean is_anomaly
+        string fault_type
+    }
+    INDUSTRIAL_REPORTS {
+        int id PK
+        datetime timestamp
+        string check_type
+        float click_acoustic_peak
+        float weld_current_ka
+        float spatter_level
+    }
+    SUPPLY_CHAIN_EVENTS {
+        int id PK
+        datetime timestamp
+        string supplier_id
+        string material
+        float geopolitical_risk_score
+        float supplier_defect_rate
+        int risk_score
+    }
+    FLEET_READINESS {
+        int id PK
+        datetime timestamp
+        string vehicle_id
+        float payload_tons
+        float readiness_score
+        float carbon_saved_kg
+    }
+```
 
-### 5. Net Zero Progress & Carbon Intelligence Tracker
-*   **Requirement:** Track fleet electrification progress and quantify Scope 1 and Scope 3 emission reductions.
-*   **Implementation:** Live carbon offset tracking (diesel emissions avoided) is integrated directly into the React Dashboard's top KPI bar.
+## REST API Flow
+*   `POST /api/telemetry/ev` -> Validates payload -> Runs SOH & Autoencoder models -> Broadcasts to WS.
+*   `POST /api/telemetry/industrial` -> Runs QMS Classifiers -> Broadcasts.
+*   `POST /api/telemetry/supply_chain` -> Runs Risk Classifier -> Broadcasts.
+*   `POST /api/telemetry/fleet` -> Runs Readiness Regressor -> Broadcasts.
 
----
+## Data Flow: EV Telemetry Injection
+*(Adapted from Add Student flow)*
+When the simulator (or a real factory sensor) sends EV data:
+1.  Sensor transmits `JSON` with Voltage, Temp, and X/Y/Z Vibrations.
+2.  FastAPI normalizes the data against the `ev_motor_anomaly_scaler.pkl`.
+3.  The PyTorch Autoencoder attempts to reconstruct the signal. If the MSE > Threshold, `is_anomaly = True`.
+4.  The result is logged to `ev_telemetry` and pushed to the React UI.
 
-## ⚙️ System Architecture
+## Data Flow: Manufacturing QMS Data
+*(Adapted from Attendance flow)*
+1.  Acoustic sensors on the assembly line send frequency (Hz) and decibel (dB) data for wire harness clicks.
+2.  The PyTorch `industrial_click_model` classifies the click as `PASS` or `FAIL` (improper seating).
+3.  The UI instantly flashes the assembly line status.
 
-The project consists of 4 main components working in unison:
-1.  **Telemetry Simulator (`backend/simulator.py`):** Generates synthetic, high-frequency IoT data for EVs, factory equipment, and supply chains.
-2.  **FastAPI Edge Gateway (`backend/main.py`):** The central hub. It receives telemetry, standardizes it, and feeds it into the AI models.
-3.  **PyTorch & GenAI Engine (`backend/train_models.py`):** Hosts the deep neural networks and the HuggingFace `distilgpt2` NLP pipeline.
-4.  **React.js Dashboard (`frontend/src/App.jsx`):** A glassmorphism-styled, real-time command center receiving data via WebSockets.
+## Risk Alert Logic
+When a fault is injected (e.g., Supply Chain Geopolitical Shock):
+1.  The PyTorch Supply Chain model flags `risk_score = 1` (High Risk).
+2.  The backend triggers the `distilgpt2` LLM: *"Generate mitigation strategy for High Geopolitical Risk in Lithium supply."*
+3.  The LLM generates a response like: *"Immediate action required: Pivot 30% of Lithium orders to Tier-2 domestic suppliers to mitigate geopolitical exposure."*
+4.  This alert is rendered in the neon-bordered **Gen AI Agent Insights** terminal on the frontend.
 
----
+## Application Screens
+*   **Unified KPI Dashboard:** Top strip showing total fleet carbon saved and high-level health.
+*   **EV Asset Performance:** Real-time line charts for Battery SOH and Motor Vibration MSE.
+*   **Supply Chain Risk:** Bar charts comparing geopolitical exposure across Cobalt and Lithium suppliers.
+*   **QMS & Fleet:** Area charts mapping tool wear and truck payload efficiency.
+*   **AI Fault Control Room:** Interactive panel to manually inject system shocks for demonstration purposes.
 
-## 🧠 Deep Learning & GenAI Models
+## Full API Reference
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Health check and loaded model list. |
+| `GET` | `/api/stats` | Aggregated KPIs (Carbon saved, total cycles, anomaly counts). |
+| `GET` | `/api/fault/states` | Returns current state of injected faults. |
+| `POST`| `/api/fault/inject` | Modifies the boolean state of specific faults (e.g., `supply_chain_fault`). |
+| `POST`| `/api/telemetry/ev` | Ingests EV sensor data and runs SOH/Autoencoder inference. |
+| `POST`| `/api/telemetry/supply_chain` | Ingests supplier metrics and runs Risk Classifier inference. |
+| `GET` | `/api/history/{domain}` | Returns the last `limit` number of records for UI charting. |
 
-Our backend utilizes 6 distinct PyTorch models trained on high-variance synthetic datasets:
-*   **ev_soh_model.pth:** Multi-layer Perceptron (Regression).
-*   **ev_motor_anomaly_model.pth:** Deep Autoencoder (Unsupervised Anomaly Detection using MSE reconstruction loss).
-*   **industrial_click_model.pth:** Classification MLP for QA acoustic passing.
-*   **weld_electrode_health_model.pth:** Regression MLP tracking tool wear.
-*   **supply_chain_risk_model.pth:** Classification MLP identifying supplier failure probabilities.
-*   **fleet_readiness_model.pth:** Regression MLP scoring transition viability.
+## Getting Started
+1.  Clone the repository: `git clone https://github.com/thrinadh2005/Hackton.git`
+2.  Navigate to the directory: `cd Hackton`
+3.  Run the Windows bootstrap script: `./start.bat`
+4.  The script will automatically build the `venv`, install `torch`/`transformers`, train the neural networks, launch the FastAPI server, start the telemetry simulator, and open the React dashboard at `http://localhost:5173`.
 
-**Generative AI (`distilgpt2`):** Loaded via HuggingFace's `pipeline`. When a PyTorch model flags an anomaly (e.g., Motor Vibration > 1.2 MSE), the exact context is passed to the LLM, which generates a prescriptive action in real-time.
+## Seed Data
+The `simulator.py` script acts as our live data seeder. Upon startup, it generates standard-distribution normal operational data. It operates in an infinite `while` loop, generating synthetic telemetry arrays at ~10Hz and POSTing them to the local FastAPI endpoints.
 
----
+## Development Notes
+*   The PyTorch models are explicitly designed to be retrainable. Deleting the `models/*.pth` files and re-running `start.bat` will automatically trigger a fresh PyTorch training loop (`train_models.py`).
+*   The HuggingFace model (`distilgpt2`) will download on the first run. Ensure you have ~350MB of free space in your HuggingFace cache folder.
+*   Vite HMR is enabled. Any changes to `App.jsx` will hot-reload instantly.
 
-## 🚀 Getting Started (Installation)
-
-### Prerequisites
-*   Python 3.9+
-*   Node.js v16+
-*   Git
-
-### 1-Click Launch (Windows)
-We have provided a convenient batch script that handles the entire setup (creating virtual environments, installing dependencies, pre-training the AI models, and launching all servers).
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/thrinadh2005/Hackton.git
-   cd Hackton
-   ```
-2. Run the startup script:
-   ```powershell
-   ./start.bat
-   ```
-3. The script will open three terminal windows (Backend, Simulator, Frontend). *Note: The very first run will take a few minutes as it downloads PyTorch and the HuggingFace AI weights (~500MB).*
-4. Your browser will automatically open to `http://localhost:5173`.
-
----
-
-## 🎮 User Guide: How to Demo the Project
-
-Once the dashboard is running, follow these steps to demonstrate the AI capabilities to the judges:
-
-### 1. Observe the Baseline
-Navigate through the tabs (**EV Asset Performance**, **Supply Chain Risk**, **QMS Manufacturing**, **Fleet Electrification**). Notice how the live charts are plotting standard, healthy data being fed from the telemetry simulator.
-
-### 2. Open the "AI Fault Control Room"
-Click the **🎛️ AI Fault Control Room** tab. This panel allows you to artificially inject realistic physical and geopolitical faults into the simulation data stream.
-
-### 3. Inject a Supply Chain Shock
-1. Click the **"INJECT FAULT"** button under the **Supply Chain Shock** card.
-2. Quickly navigate back to the **🌍 Supply Chain Risk** tab.
-3. You will see the Geopolitical Risk bar chart spike drastically. The AI will classify the material shipment as **"High Risk"**.
-4. **Look at the Gen AI Feed:** Right below the top KPIs, you will see the GenAI agent output a live message (e.g., *"Supply Chain Shock Detected. Pivot to tier-2 domestic supplier..."*).
-
-### 4. Trigger Predictive Maintenance (APM)
-1. Go back to the Control Room and inject a **Motor Bearing Outlier**.
-2. Navigate to the **🚗 EV Asset Performance** tab.
-3. The PyTorch Autoencoder will fail to reconstruct the erratic vibration data, causing the MSE Anomaly Score to exceed the safety threshold. 
-4. A red, shaking alert banner will appear, and the GenAI feed will advise on immediate maintenance protocols.
-
----
-
-## 📦 Expected Deliverables
-- [x] **Working Prototype:** Fully functional FastAPI Backend, PyTorch Inference engine, and React.js WebSocket Frontend.
-- [x] **Architecture Diagram:** An animated, programmatic 3D visualization using Blender Python (`blender_visualization.py`).
-- [ ] **Presentation Deck:** *(Link to be added)*
-- [ ] **Demo Video:** *(Link to be added)*
-
----
-*Built for the Net Zero Hackathon.*
+## Future Enhancements
+*   Integration with real-world ERP systems (SAP, Oracle).
+*   Live API links to Bloomberg/Reuters geopolitical news feeds for dynamic supply chain risk scoring.
+*   Web-embedded WebGL/Three.js frontend integration for the in-browser 3D Digital Twin (currently handled externally by `blender_visualization.py`).
